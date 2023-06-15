@@ -15,19 +15,30 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const passport_1 = __importDefault(require("passport"));
 const passport_local_1 = require("passport-local");
 const model_1 = __importDefault(require("../../database/model"));
-passport_1.default.use(new passport_local_1.Strategy((username, password, done) => __awaiter(void 0, void 0, void 0, function* () {
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+passport_1.default.use("local", new passport_local_1.Strategy({ usernameField: "username", passwordField: "password" }, (username, password, done) => __awaiter(void 0, void 0, void 0, function* () {
     //Login logic
+    console.log(username, password);
     const result = yield model_1.default.findOne({ email: username })
         .exec()
         .catch((err) => {
         console.error(err);
     });
     if (result) {
-        console.log(result);
-        return done(null, result.id);
+        //console.log(result);
+        const payload = {
+            sub: result._id,
+        };
+        const token = jsonwebtoken_1.default.sign(payload, "top-secret");
+        const data = {
+            email: result.email,
+            type: result.account_type
+        };
+        //@ts-ignore
+        return done(null, token, data);
     }
-    done({ message: "Not Found" }, false);
-    console.log(username, password);
+    console.log("It started");
+    done({ name: "IncorrectCredentialsError", message: "Not Found" }, true);
 })));
 passport_1.default.serializeUser((user, done) => {
     done(null, user);

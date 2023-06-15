@@ -23,7 +23,24 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Transactions = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
+const RatingSchema = new mongoose_1.Schema({
+    from: { type: String, required: true },
+    rate: { type: Number, min: 0, max: 5 },
+});
+const TransactionsSchema = new mongoose_1.Schema({
+    borrower: { type: String, required: true },
+    lender: { type: String, required: true },
+    amount: { type: Number, required: true },
+    due_date: { type: Date, required: true },
+    amount_settled: { type: Number, default: 0 },
+    active: { type: Boolean, default: true },
+    accepted: { type: Boolean, default: false },
+    proposer: { type: String, required: true },
+    interest: { type: Number, required: true },
+    debt: { type: Number, default: 0 },
+});
 const UserSchema = new mongoose_1.Schema({
     fname: { type: String, required: true },
     lname: { type: String, required: true },
@@ -33,7 +50,7 @@ const UserSchema = new mongoose_1.Schema({
     company: { type: String, required: false },
     tax_number: { type: String, required: false },
     verified: { type: Boolean, required: true, default: false },
-    account_type: { type: String, required: true, default: "Borrower" },
+    account_type: { type: String, required: true, default: "borrower" },
     points: { type: Number, required: true, default: 0 },
     contact: { type: String, required: true },
     ghana_card: { type: String, required: true },
@@ -43,6 +60,8 @@ const UserSchema = new mongoose_1.Schema({
     kin_ghana_card: { type: String, required: true },
     kin_image: { type: String, required: true },
     balance: { type: Number, required: true, default: 0 },
+    address: { type: String, required: true },
 });
 const User = mongoose_1.default.model("User", UserSchema);
+exports.Transactions = mongoose_1.default.model("Transactions", TransactionsSchema);
 exports.default = User;

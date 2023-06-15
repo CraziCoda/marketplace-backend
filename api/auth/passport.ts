@@ -1,22 +1,40 @@
 import passport from "passport";
-import { Strategy } from "passport-local";
+import { IVerifyOptions, Strategy } from "passport-local";
 import User from "../../database/model";
- 
+import jwt from "jsonwebtoken";
+
 passport.use(
-	new Strategy(async (username, password, done) => {
-		//Login logic
-		const result = await User.findOne({ email: username })
-			.exec()
-			.catch((err) => {
-				console.error(err);
-			});
-		if (result) {
-			console.log(result);
-			return done(null, result.id);
+	"local",
+	new Strategy(
+		{ usernameField: "username", passwordField: "password" },
+		async (username, password, done) => {
+			//Login logic
+			console.log(username, password);
+			const result = await User.findOne({ email: username })
+				.exec()
+				.catch((err) => {
+					console.error(err);
+				});
+			if (result) {
+				//console.log(result);
+				const payload = {
+					sub: result._id,
+				};
+				const token = jwt.sign(payload, "top-secret");
+
+				const data = {
+					email: result.email,
+					type: result.account_type
+				};
+
+				//@ts-ignore
+				return done(null, token, data);
+			}
+			console.log("It started");
+
+			done({ name: "IncorrectCredentialsError", message: "Not Found" }, true);
 		}
-		done({ message: "Not Found" }, false);
-		console.log(username, password);
-	})
+	)
 );
 
 passport.serializeUser((user, done) => {

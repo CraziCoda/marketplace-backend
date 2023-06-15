@@ -15,7 +15,7 @@ interface UserI {
 	company: string;
 	tax_number: string;
 	verified: boolean;
-	account_type: "Borrower" | "Lender";
+	account_type: "borrower" | "lender";
 	points: number;
 	contact: string;
 	ghana_card: string;
@@ -26,7 +26,45 @@ interface UserI {
 	kin_image: string;
 	address: string;
 	balance: number;
+	ratings: RatingI[];
 }
+
+interface RatingI {
+	from: string;
+	rate: number;
+}
+
+interface TransactionsI {
+	borrower: string;
+	lender: string;
+	amount: number;
+	due_date: Date;
+	amount_settled: number;
+	active: boolean;
+	proposer: "lender" | "borrower";
+	accepted: boolean;
+	interest: number;
+	debt: number;
+}
+
+const RatingSchema = new Schema<RatingI>({
+	from: { type: String, required: true },
+	rate: { type: Number, min: 0, max: 5 },
+});
+
+const TransactionsSchema = new Schema<TransactionsI>({
+	borrower: { type: String, required: true },
+	lender: { type: String, required: true },
+	amount: { type: Number, required: true },
+	due_date: { type: Date, required: true },
+	amount_settled: { type: Number, default: 0 },
+	active: { type: Boolean, default: true },
+	accepted: { type: Boolean, default: false },
+	proposer: { type: String, required: true },
+	interest: { type: Number, required: true },
+	debt: { type: Number, default: 0 },
+	
+});
 
 const UserSchema = new Schema<UserI>({
 	fname: { type: String, required: true },
@@ -37,7 +75,7 @@ const UserSchema = new Schema<UserI>({
 	company: { type: String, required: false },
 	tax_number: { type: String, required: false },
 	verified: { type: Boolean, required: true, default: false },
-	account_type: { type: String, required: true, default: "Borrower" },
+	account_type: { type: String, required: true, default: "borrower" },
 	points: { type: Number, required: true, default: 0 },
 	contact: { type: String, required: true },
 	ghana_card: { type: String, required: true },
@@ -51,5 +89,9 @@ const UserSchema = new Schema<UserI>({
 });
 
 const User = mongoose.model<UserI>("User", UserSchema);
+export const Transactions = mongoose.model<TransactionsI>(
+	"Transactions",
+	TransactionsSchema
+);
 
 export default User;
