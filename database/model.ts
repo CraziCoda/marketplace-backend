@@ -47,6 +47,12 @@ interface TransactionsI {
 	debt: number;
 }
 
+interface MessagesI {
+	message: string;
+	from: string;
+	to: string;
+}
+
 const RatingSchema = new Schema<RatingI>({
 	from: { type: String, required: true },
 	rate: { type: Number, min: 0, max: 5 },
@@ -63,7 +69,6 @@ const TransactionsSchema = new Schema<TransactionsI>({
 	proposer: { type: String, required: true },
 	interest: { type: Number, required: true },
 	debt: { type: Number, default: 0 },
-	
 });
 
 const UserSchema = new Schema<UserI>({
@@ -88,10 +93,18 @@ const UserSchema = new Schema<UserI>({
 	address: { type: String, required: true },
 });
 
+const MessagesSchema = new Schema<MessagesI>({
+	message: { type: String, required: true },
+	from: { type: String, required: true },
+	to: { type: String, required: true },
+});
+
 const User = mongoose.model<UserI>("User", UserSchema);
 export const Transactions = mongoose.model<TransactionsI>(
 	"Transactions",
 	TransactionsSchema
 );
+
+export const Message = mongoose.model<MessagesI>("Message", MessagesSchema);
 
 export default User;

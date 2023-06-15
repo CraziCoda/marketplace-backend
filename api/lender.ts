@@ -20,7 +20,7 @@ router.get("/view-lenders", isLoggedIn, async (req, res) => {
 	res.json(result);
 });
 
-router.get("/view", isLoggedIn, async (req, res) => {
+router.get("/showcase", isLoggedIn, async (req, res) => {
 	//@ts-ignore
 	const user = req.user.sub;
 
@@ -42,18 +42,59 @@ router.get("/view", isLoggedIn, async (req, res) => {
 
 router.get("/dashboard", isLoggedIn, async (req, res) => {
 	// console.log("received")
+	// const result = await User.findById(req.user.sub)
+	// 	.exec()
+	// 	.catch((err) => {
+	// 		console.error(err);
+	// 		res.status(404).json({});
+	// 	});
+	// res.json(result);
 
 	//@ts-ignore
-	const result = await User.findById(req.user.sub)
+	const user = req.user.sub;
+
+	const r = await User.findById(user)
 		.exec()
 		.catch((err) => {
 			console.error(err);
-			res.status(404).json({});
+			res.status(500).json({});
 		});
-	res.json(result);
+
+	if (r?.account_type == "lender") {
+		const transactions = await Transactions.find({ lender: r._id });
+		let revenue = 0;
+		for (let i = 0; i < transactions.length; i++) {
+			const transaction = transactions[i];
+			if (transaction.accepted == true && transaction.active == false) {
+				revenue += transaction.amount * (transaction.interest / 100);
+			}
+		}
+		const data = {
+			balance: r.balance,
+			transactions: transactions,
+			revenue: revenue,
+		};
+
+		res.json(data);
+	} else if (r?.account_type == "borrower") {
+	} else {
+		//res.status(401).json({message: "Invalid request"})
+	}
 });
 router.get("/view", async (req, res) => {
 	const user = req.query.id;
+
+	const result = await User.findById(user).catch((err) => {
+		console.error(err);
+		res.status(500).json({});
+	});
+
+	res.json(result);
+});
+
+router.get("/me", isLoggedIn, async (req, res) => {
+	//@ts-ignore
+	const user = req?.user.sub;
 
 	const result = await User.findById(user).catch((err) => {
 		console.error(err);
@@ -217,8 +258,40 @@ router.post("/accept", isLoggedIn, async (req, res) => {
 
 	res.json({ message: "Successfull" });
 });
-router.post("/deposit", isLoggedIn, (req, res) => {});
-router.post("/withdraw", isLoggedIn, (req, res) => {});
+router.post("/deposit", isLoggedIn, (req, res) => {
+	//@ts-ignore
+	const user = req.user.sub;
+	const amount = req.body.amount;
+
+	User.findByIdAndUpdate(user, {
+		//@ts-ignore
+		$inc: { balance: amount },
+	}).exec();
+
+	res.json({ message: `Deposit Successfull` });
+});
+router.post("/withdraw", isLoggedIn, async (req, res) => {
+	//@ts-ignore
+	const user = req.user.sub;
+	const amount = req.body.amount;
+
+	let r = await User.findById(user).catch((err) => {
+		console.error(err);
+		res.status(500).json({});
+	});
+
+	//@ts-ignore
+	if (r?.balance >= amount) {
+		User.findByIdAndUpdate(user, {
+			//@ts-ignore
+			$inc: { balance: -amount },
+		}).exec();
+
+		return res.json({ message: `Withdrawal Successfull` });
+	}
+	res.json({ message: `Insufficient funds` });
+
+});
 router.post("/payback", isLoggedIn, (req, res) => {});
 
 export default router;

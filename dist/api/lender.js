@@ -49,7 +49,7 @@ router.get("/view-lenders", sign_1.isLoggedIn, (req, res) => __awaiter(void 0, v
     });
     res.json(result);
 }));
-router.get("/view", sign_1.isLoggedIn, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get("/showcase", sign_1.isLoggedIn, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     //@ts-ignore
     const user = req.user.sub;
     const r = yield model_1.default.findById(user).catch((err) => {
@@ -68,17 +68,54 @@ router.get("/view", sign_1.isLoggedIn, (req, res) => __awaiter(void 0, void 0, v
 }));
 router.get("/dashboard", sign_1.isLoggedIn, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // console.log("received")
+    // const result = await User.findById(req.user.sub)
+    // 	.exec()
+    // 	.catch((err) => {
+    // 		console.error(err);
+    // 		res.status(404).json({});
+    // 	});
+    // res.json(result);
     //@ts-ignore
-    const result = yield model_1.default.findById(req.user.sub)
+    const user = req.user.sub;
+    const r = yield model_1.default.findById(user)
         .exec()
         .catch((err) => {
         console.error(err);
-        res.status(404).json({});
+        res.status(500).json({});
     });
-    res.json(result);
+    if ((r === null || r === void 0 ? void 0 : r.account_type) == "lender") {
+        const transactions = yield model_1.Transactions.find({ lender: r._id });
+        let revenue = 0;
+        for (let i = 0; i < transactions.length; i++) {
+            const transaction = transactions[i];
+            if (transaction.accepted == true && transaction.active == false) {
+                revenue += transaction.amount * (transaction.interest / 100);
+            }
+        }
+        const data = {
+            balance: r.balance,
+            transactions: transactions,
+            revenue: revenue,
+        };
+        res.json(data);
+    }
+    else if ((r === null || r === void 0 ? void 0 : r.account_type) == "borrower") {
+    }
+    else {
+        //res.status(401).json({message: "Invalid request"})
+    }
 }));
 router.get("/view", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const user = req.query.id;
+    const result = yield model_1.default.findById(user).catch((err) => {
+        console.error(err);
+        res.status(500).json({});
+    });
+    res.json(result);
+}));
+router.get("/me", sign_1.isLoggedIn, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    //@ts-ignore
+    const user = req === null || req === void 0 ? void 0 : req.user.sub;
     const result = yield model_1.default.findById(user).catch((err) => {
         console.error(err);
         res.status(500).json({});
@@ -222,7 +259,33 @@ router.post("/accept", sign_1.isLoggedIn, (req, res) => __awaiter(void 0, void 0
     }
     res.json({ message: "Successfull" });
 }));
-router.post("/deposit", sign_1.isLoggedIn, (req, res) => { });
-router.post("/withdraw", sign_1.isLoggedIn, (req, res) => { });
+router.post("/deposit", sign_1.isLoggedIn, (req, res) => {
+    //@ts-ignore
+    const user = req.user.sub;
+    const amount = req.body.amount;
+    model_1.default.findByIdAndUpdate(user, {
+        //@ts-ignore
+        $inc: { balance: amount },
+    }).exec();
+    res.json({ message: `Deposit Successfull` });
+});
+router.post("/withdraw", sign_1.isLoggedIn, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    //@ts-ignore
+    const user = req.user.sub;
+    const amount = req.body.amount;
+    let r = yield model_1.default.findById(user).catch((err) => {
+        console.error(err);
+        res.status(500).json({});
+    });
+    //@ts-ignore
+    if ((r === null || r === void 0 ? void 0 : r.balance) >= amount) {
+        model_1.default.findByIdAndUpdate(user, {
+            //@ts-ignore
+            $inc: { balance: -amount },
+        }).exec();
+        return res.json({ message: `Withdrawal Successfull` });
+    }
+    res.json({ message: `Insufficient funds` });
+}));
 router.post("/payback", sign_1.isLoggedIn, (req, res) => { });
 exports.default = router;

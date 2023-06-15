@@ -23,7 +23,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Transactions = void 0;
+exports.Message = exports.Transactions = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 const RatingSchema = new mongoose_1.Schema({
     from: { type: String, required: true },
@@ -62,6 +62,12 @@ const UserSchema = new mongoose_1.Schema({
     balance: { type: Number, required: true, default: 0 },
     address: { type: String, required: true },
 });
+const MessagesSchema = new mongoose_1.Schema({
+    message: { type: String, required: true },
+    from: { type: String, required: true },
+    to: { type: String, required: true },
+});
 const User = mongoose_1.default.model("User", UserSchema);
 exports.Transactions = mongoose_1.default.model("Transactions", TransactionsSchema);
+exports.Message = mongoose_1.default.model("Message", MessagesSchema);
 exports.default = User;
