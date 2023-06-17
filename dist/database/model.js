@@ -68,6 +68,10 @@ const MessagesSchema = new mongoose_1.Schema({
     to: { type: String, required: true },
     time: { type: Date, required: true },
 });
+const AdminSchema = new mongoose_1.Schema({
+    username: { type: String, required: true },
+    password: { type: String, required: true },
+});
 const User = mongoose_1.default.model("User", UserSchema);
 exports.Transactions = mongoose_1.default.model("Transactions", TransactionsSchema);
 exports.Message = mongoose_1.default.model("Message", MessagesSchema);

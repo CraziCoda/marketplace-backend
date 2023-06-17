@@ -1,4 +1,13 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -11,6 +20,7 @@ const lender_1 = __importDefault(require("./api/lender"));
 const cors_1 = __importDefault(require("cors"));
 const http_1 = __importDefault(require("http"));
 const socket_io_1 = require("socket.io");
+const model_1 = require("./database/model");
 require("./database/index");
 const app = (0, express_1.default)();
 const port = process.env.PORT || 4000;
@@ -35,10 +45,59 @@ app.get("/", (req, res) => {
 app.get("/login", (req, res) => {
     res.send("Login");
 });
+const online = [];
 io.on("connection", (socket) => {
     //console.log("a new user connection");
-    socket.on('disconnect', (msg) => {
+    socket.on("disconnect", (msg) => {
+        for (let i = 0; i < online.length; i++) {
+            if (socket.id === online[i].sockID) {
+                online.splice(i, 1);
+            }
+        }
     });
+    socket.on("newMessage", (data) => __awaiter(void 0, void 0, void 0, function* () {
+        let msg = new model_1.Message({
+            to: data.to,
+            from: data.from,
+            time: data.date,
+            message: data.msg,
+        });
+        msg.save();
+        let sock = "";
+        for (let i = 0; i < online.length; i++) {
+            if (online[i].user === data.to) {
+                sock = online[i].sockID;
+            }
+        }
+        const messages = yield model_1.Message.find({
+            from: { $in: [data.to, data.from] },
+            to: { $in: [data.to, data.from] },
+        }).exec();
+        if (sock != "")
+            io.to(sock).emit("messages", messages);
+    }));
+    socket.on("addUser", (data) => {
+        for (let i = 0; i < online.length; i++) {
+            if (data.user === online[i].user) {
+                return;
+            }
+        }
+        online.push(Object.assign({}, data));
+    });
+    socket.on("fetchMessages", (data) => __awaiter(void 0, void 0, void 0, function* () {
+        let sock = "";
+        for (let i = 0; i < online.length; i++) {
+            if (online[i].user === data.user1) {
+                sock = online[i].sockID;
+            }
+        }
+        const messages = yield model_1.Message.find({
+            from: { $in: [data.user1, data.user2] },
+            to: { $in: [data.user1, data.user2] },
+        }).exec();
+        if (sock != "")
+            io.to(sock).emit("messages", messages);
+    }));
 });
 app.use("/auth", sign_1.default);
 app.use("/", lender_1.default);

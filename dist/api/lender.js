@@ -100,9 +100,23 @@ router.get("/dashboard", sign_1.isLoggedIn, (req, res) => __awaiter(void 0, void
         res.json(data);
     }
     else if ((r === null || r === void 0 ? void 0 : r.account_type) == "borrower") {
+        const transactions = yield model_1.Transactions.find({ borrower: r._id });
+        let debt = 0;
+        for (let i = 0; i < transactions.length; i++) {
+            const transaction = transactions[i];
+            if (transaction.accepted == true && transaction.active == true) {
+                debt -= transaction.amount * (transaction.interest / 100);
+            }
+        }
+        const data = {
+            points: r.points,
+            debt: debt,
+            balance: r.balance,
+        };
+        res.json(data);
     }
     else {
-        //res.status(401).json({message: "Invalid request"})
+        res.status(401).json({ message: "Invalid request" });
     }
 }));
 router.get("/view", (req, res) => __awaiter(void 0, void 0, void 0, function* () {

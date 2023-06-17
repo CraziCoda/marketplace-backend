@@ -77,10 +77,24 @@ router.get("/dashboard", isLoggedIn, async (req, res) => {
 
 		res.json(data);
 	} else if (r?.account_type == "borrower") {
+		const transactions = await Transactions.find({ borrower: r._id });
+		let debt = 0;
+		for (let i = 0; i < transactions.length; i++) {
+			const transaction = transactions[i];
+			if (transaction.accepted == true && transaction.active == true) {
+				debt -= transaction.amount * (transaction.interest / 100);
+			}
+		}
+		const data = {
+			points: r.points,
+			debt: debt,
+			balance: r.balance,
+		};
+		res.json(data);
 	} else {
-		//res.status(401).json({message: "Invalid request"})
+		res.status(401).json({ message: "Invalid request" });
 	}
-});
+}); 
 router.get("/view", async (req, res) => {
 	const user = req.query.id;
 
@@ -88,7 +102,6 @@ router.get("/view", async (req, res) => {
 		console.error(err);
 		res.status(500).json({});
 	});
-
 
 	res.json(result);
 });
@@ -291,7 +304,6 @@ router.post("/withdraw", isLoggedIn, async (req, res) => {
 		return res.json({ message: `Withdrawal Successfull` });
 	}
 	res.json({ message: `Insufficient funds` });
-
 });
 router.post("/payback", isLoggedIn, (req, res) => {});
 

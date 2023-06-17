@@ -29,6 +29,11 @@ interface UserI {
 	ratings: RatingI[];
 }
 
+interface AdminI {
+	username: string;
+	password: string;
+}
+
 interface RatingI {
 	from: string;
 	rate: number;
@@ -99,6 +104,11 @@ const MessagesSchema = new Schema<MessagesI>({
 	from: { type: String, required: true },
 	to: { type: String, required: true },
 	time: { type: Date, required: true },
+});
+
+const AdminSchema = new Schema<AdminI>({
+	username: { type: String, required: true },
+	password: { type: String, required: true },
 });
 
 const User = mongoose.model<UserI>("User", UserSchema);
