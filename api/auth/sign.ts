@@ -3,7 +3,6 @@ import passport from "./passport";
 import User from "../../database/model";
 import uploads from "../../storage";
 import jwt from "jsonwebtoken";
-import exp from "constants";
 
 export const isLoggedIn = (req: Request, res: Response, next: NextFunction) => {
 	const token = req.headers.authorization?.split(" ")[1];
@@ -25,6 +24,7 @@ router.post("/login", (req, res, next) => {
 	//res.json({ status: 200, message: "Login Successful" });
 	return passport.authenticate(
 		"local",
+		{ session: false },
 		(err: { name: string; message: any }, token: any, data: any) => {
 			if (err) {
 				if (err.name === "IncorrectCredentialsError") {

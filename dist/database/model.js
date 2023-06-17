@@ -66,6 +66,7 @@ const MessagesSchema = new mongoose_1.Schema({
     message: { type: String, required: true },
     from: { type: String, required: true },
     to: { type: String, required: true },
+    time: { type: Date, required: true },
 });
 const User = mongoose_1.default.model("User", UserSchema);
 exports.Transactions = mongoose_1.default.model("Transactions", TransactionsSchema);

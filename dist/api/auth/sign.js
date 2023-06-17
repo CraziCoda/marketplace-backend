@@ -36,7 +36,7 @@ exports.isLoggedIn = isLoggedIn;
 const router = express_1.default.Router();
 router.post("/login", (req, res, next) => {
     //res.json({ status: 200, message: "Login Successful" });
-    return passport_1.default.authenticate("local", (err, token, data) => {
+    return passport_1.default.authenticate("local", { session: false }, (err, token, data) => {
         if (err) {
             if (err.name === "IncorrectCredentialsError") {
                 return res.status(400).json({

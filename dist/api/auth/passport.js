@@ -18,7 +18,7 @@ const model_1 = __importDefault(require("../../database/model"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 passport_1.default.use("local", new passport_local_1.Strategy({ usernameField: "username", passwordField: "password" }, (username, password, done) => __awaiter(void 0, void 0, void 0, function* () {
     //Login logic
-    console.log(username, password);
+    //console.log(username, password);
     const result = yield model_1.default.findOne({ email: username })
         .exec()
         .catch((err) => {
@@ -32,7 +32,7 @@ passport_1.default.use("local", new passport_local_1.Strategy({ usernameField: "
         const token = jsonwebtoken_1.default.sign(payload, "top-secret");
         const data = {
             email: result.email,
-            type: result.account_type
+            type: result.account_type,
         };
         //@ts-ignore
         return done(null, token, data);

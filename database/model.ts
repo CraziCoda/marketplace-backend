@@ -51,6 +51,7 @@ interface MessagesI {
 	message: string;
 	from: string;
 	to: string;
+	time: Date;
 }
 
 const RatingSchema = new Schema<RatingI>({
@@ -97,6 +98,7 @@ const MessagesSchema = new Schema<MessagesI>({
 	message: { type: String, required: true },
 	from: { type: String, required: true },
 	to: { type: String, required: true },
+	time: { type: Date, required: true },
 });
 
 const User = mongoose.model<UserI>("User", UserSchema);

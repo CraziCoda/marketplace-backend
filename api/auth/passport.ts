@@ -9,7 +9,7 @@ passport.use(
 		{ usernameField: "username", passwordField: "password" },
 		async (username, password, done) => {
 			//Login logic
-			console.log(username, password);
+			//console.log(username, password);
 			const result = await User.findOne({ email: username })
 				.exec()
 				.catch((err) => {
@@ -24,7 +24,7 @@ passport.use(
 
 				const data = {
 					email: result.email,
-					type: result.account_type
+					type: result.account_type,
 				};
 
 				//@ts-ignore
