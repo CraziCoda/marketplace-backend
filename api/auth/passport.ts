@@ -15,7 +15,7 @@ passport.use(
 				.catch((err) => {
 					console.error(err);
 				});
-			if (result) {
+			if (result?.password == password) {
 				//console.log(result);
 				const payload = {
 					sub: result._id,
@@ -26,7 +26,7 @@ passport.use(
 					email: result.email,
 					type: result.account_type,
 				};
-
+ 
 				//@ts-ignore
 				return done(null, token, data);
 			}
@@ -46,7 +46,7 @@ passport.use(
 					console.error(err);
 				});
 
-			if(result?.password == password){
+			if (result?.password == password) {
 				const payload = {
 					sub: result._id,
 				};
@@ -61,8 +61,6 @@ passport.use(
 			}
 
 			done({ name: "IncorrectCredentialsError", message: "Not Found" }, false);
-
-
 		}
 	)
 );

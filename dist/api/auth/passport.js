@@ -38,7 +38,7 @@ passport_1.default.use("local", new passport_local_1.Strategy({ usernameField: "
         .catch((err) => {
         console.error(err);
     });
-    if (result) {
+    if ((result === null || result === void 0 ? void 0 : result.password) == password) {
         //console.log(result);
         const payload = {
             sub: result._id,

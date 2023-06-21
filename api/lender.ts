@@ -60,6 +60,14 @@ router.get("/dashboard", isLoggedIn, async (req, res) => {
 			res.status(500).json({});
 		});
 
+	const users = await User.find().exec();
+	const names = [];
+	const ids = [];
+	for (let i = 0; i < users.length; i++) {
+		names.push(users[i].fname + " " + users[i].lname);
+		ids.push(users[i].id);
+	}
+
 	if (r?.account_type == "lender") {
 		const transactions = await Transactions.find({ lender: r._id });
 		let revenue = 0;
@@ -69,10 +77,14 @@ router.get("/dashboard", isLoggedIn, async (req, res) => {
 				revenue += transaction.amount * (transaction.interest / 100);
 			}
 		}
+
 		const data = {
 			balance: r.balance,
 			transactions: transactions,
 			revenue: revenue,
+			points: r.points,
+			names,
+			ids,
 		};
 
 		res.json(data);
@@ -90,11 +102,14 @@ router.get("/dashboard", isLoggedIn, async (req, res) => {
 			points: r.points,
 			debt: debt,
 			balance: r.balance,
+			transactions: transactions,
+			names,
+			ids,
 		};
 		res.json(data);
 	} else {
 		res.status(401).json({ message: "Invalid request" });
-	}
+	} 
 });
 router.get("/view", async (req, res) => {
 	const user = req.query.id;
@@ -149,7 +164,6 @@ router.get("/transactions", isLoggedIn, async (req, res) => {
 				res.status(404).json({});
 			});
 	}
-
 	res.json(result);
 });
 
@@ -234,10 +248,10 @@ router.post("/accept", isLoggedIn, async (req, res) => {
 		} else {
 			User.findByIdAndUpdate(t?.lender, {
 				//@ts-ignore
-				$inc: { balance: -t?.amount },
+				$inc: { balance: -t?.amount, points: 10 },
 			}).exec();
 			User.findByIdAndUpdate(t?.borrower, {
-				$inc: { balance: t?.amount },
+				$inc: { balance: t?.amount},
 			}).exec();
 
 			Transactions.findByIdAndUpdate(transaction_id, {
@@ -256,7 +270,7 @@ router.post("/accept", isLoggedIn, async (req, res) => {
 		} else {
 			User.findByIdAndUpdate(t?.lender, {
 				//@ts-ignore
-				$inc: { balance: -t?.amount },
+				$inc: { balance: -t?.amount, points: 10 },
 			}).exec();
 
 			User.findByIdAndUpdate(t?.borrower, {
@@ -329,8 +343,9 @@ router.post("/payback", isLoggedIn, async (req, res) => {
 	const rate = profit * (c.lender / 100);
 	//@ts-ignore
 	const b_pay = t?.debt;
+
 	User.findByIdAndUpdate(t?.borrower, {
-		$inc: { balance: b_pay },
+		$inc: { balance: b_pay, points: 10 },
 	}).exec();
 	User.findByIdAndUpdate(t?.lender, {
 		//@ts-ignore

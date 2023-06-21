@@ -74,6 +74,13 @@ router.get("/dashboard", sign_1.isLoggedIn, async (req, res) => {
         console.error(err);
         res.status(500).json({});
     });
+    const users = await model_1.default.find().exec();
+    const names = [];
+    const ids = [];
+    for (let i = 0; i < users.length; i++) {
+        names.push(users[i].fname + " " + users[i].lname);
+        ids.push(users[i].id);
+    }
     if ((r === null || r === void 0 ? void 0 : r.account_type) == "lender") {
         const transactions = await model_1.Transactions.find({ lender: r._id });
         let revenue = 0;
@@ -87,6 +94,9 @@ router.get("/dashboard", sign_1.isLoggedIn, async (req, res) => {
             balance: r.balance,
             transactions: transactions,
             revenue: revenue,
+            points: r.points,
+            names,
+            ids,
         };
         res.json(data);
     }
@@ -104,6 +114,9 @@ router.get("/dashboard", sign_1.isLoggedIn, async (req, res) => {
             points: r.points,
             debt: debt,
             balance: r.balance,
+            transactions: transactions,
+            names,
+            ids,
         };
         res.json(data);
     }
@@ -228,7 +241,7 @@ router.post("/accept", sign_1.isLoggedIn, async (req, res) => {
         else {
             model_1.default.findByIdAndUpdate(t === null || t === void 0 ? void 0 : t.lender, {
                 //@ts-ignore
-                $inc: { balance: -(t === null || t === void 0 ? void 0 : t.amount) },
+                $inc: { balance: -(t === null || t === void 0 ? void 0 : t.amount), points: 10 },
             }).exec();
             model_1.default.findByIdAndUpdate(t === null || t === void 0 ? void 0 : t.borrower, {
                 $inc: { balance: t === null || t === void 0 ? void 0 : t.amount },
@@ -251,7 +264,7 @@ router.post("/accept", sign_1.isLoggedIn, async (req, res) => {
         else {
             model_1.default.findByIdAndUpdate(t === null || t === void 0 ? void 0 : t.lender, {
                 //@ts-ignore
-                $inc: { balance: -(t === null || t === void 0 ? void 0 : t.amount) },
+                $inc: { balance: -(t === null || t === void 0 ? void 0 : t.amount), points: 10 },
             }).exec();
             model_1.default.findByIdAndUpdate(t === null || t === void 0 ? void 0 : t.borrower, {
                 $inc: { balance: t === null || t === void 0 ? void 0 : t.amount },
@@ -314,7 +327,7 @@ router.post("/payback", sign_1.isLoggedIn, async (req, res) => {
     //@ts-ignore
     const b_pay = t === null || t === void 0 ? void 0 : t.debt;
     model_1.default.findByIdAndUpdate(t === null || t === void 0 ? void 0 : t.borrower, {
-        $inc: { balance: b_pay },
+        $inc: { balance: b_pay, points: 10 },
     }).exec();
     model_1.default.findByIdAndUpdate(t === null || t === void 0 ? void 0 : t.lender, {
         //@ts-ignore
