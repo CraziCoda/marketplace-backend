@@ -1,6 +1,6 @@
 import passport from "passport";
 import { IVerifyOptions, Strategy } from "passport-local";
-import User from "../../database/model";
+import User, { Admin } from "../../database/model";
 import jwt from "jsonwebtoken";
 
 passport.use(
@@ -30,9 +30,39 @@ passport.use(
 				//@ts-ignore
 				return done(null, token, data);
 			}
-			console.log("It started");
+			done({ name: "IncorrectCredentialsError", message: "Not Found" }, false);
+		}
+	)
+);
 
-			done({ name: "IncorrectCredentialsError", message: "Not Found" }, true);
+passport.use(
+	"admin",
+	new Strategy(
+		{ usernameField: "username", passwordField: "password" },
+		async (username, password, done) => {
+			const result = await Admin.findOne({ username: username })
+				.exec()
+				.catch((err) => {
+					console.error(err);
+				});
+
+			if(result?.password == password){
+				const payload = {
+					sub: result._id,
+				};
+				const token = jwt.sign(payload, "top-secret");
+
+				const data = {
+					admin: result.username,
+				};
+
+				//@ts-ignore
+				return done(null, token, data);
+			}
+
+			done({ name: "IncorrectCredentialsError", message: "Not Found" }, false);
+
+
 		}
 	)
 );

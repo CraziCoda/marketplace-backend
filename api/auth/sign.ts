@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from "express";
 import passport from "./passport";
-import User from "../../database/model";
+import User, { Admin } from "../../database/model";
 import uploads from "../../storage";
 import jwt from "jsonwebtoken";
 
@@ -18,7 +18,59 @@ export const isLoggedIn = (req: Request, res: Response, next: NextFunction) => {
 	});
 };
 
+export const isAdminLoggedin = (
+	req: Request,
+	res: Response,
+	next: NextFunction
+) => {
+	const token = req.headers.authorization?.split(" ")[1];
+	if (!token) {
+		return res.sendStatus(401);
+	}
+	jwt.verify(token, "top-secret", async (err: any, user: any) => {
+		if (err) {
+			return res.sendStatus(403);
+		}
+		req.user = user;
+		const result = await Admin.findById(user.sub).exec();
+		if (result == null) return res.sendStatus(401);
+		next();
+	});
+};
+
 const router = express.Router();
+
+router.post("/admin", (req, res, next) => {
+	return passport.authenticate(
+		"admin",
+		{ session: false },
+		(err: { name: string; message: any }, token: any, data: any) => {
+			if (err) {
+				if (err.name === "IncorrectCredentialsError") {
+					return res.status(200).json({
+						success: false,
+						message: err.message,
+					});
+				}
+				return res.status(400).json({
+					success: false,
+					message: "Login Failed.",
+				});
+			}
+			if (token)
+				return res.json({
+					success: true,
+					message: "You have successfully logged in!",
+					token,
+					user: data,
+				});
+			return res.status(200).json({
+				success: false,
+				message: "Loggin Failed",
+			});
+		}
+	)(req, res, next);
+});
 
 router.post("/login", (req, res, next) => {
 	//res.json({ status: 200, message: "Login Successful" });
@@ -28,7 +80,7 @@ router.post("/login", (req, res, next) => {
 		(err: { name: string; message: any }, token: any, data: any) => {
 			if (err) {
 				if (err.name === "IncorrectCredentialsError") {
-					return res.status(400).json({
+					return res.status(200).json({
 						success: false,
 						message: err.message,
 					});

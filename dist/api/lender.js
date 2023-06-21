@@ -22,15 +22,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const sign_1 = require("./auth/sign");
@@ -39,24 +30,24 @@ const router = (0, express_1.Router)();
 router.get("/view-borrowers", sign_1.isLoggedIn, (req, res) => {
     res.send("Yes he is");
 });
-router.get("/view-lenders", sign_1.isLoggedIn, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get("/view-lenders", sign_1.isLoggedIn, async (req, res) => {
     // console.log("received")
-    const result = yield model_1.default.find({ account_type: "lender" })
+    const result = await model_1.default.find({ account_type: "lender" })
         .exec()
         .catch((err) => {
         console.error(err);
         res.status(404).json({});
     });
     res.json(result);
-}));
-router.get("/showcase", sign_1.isLoggedIn, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+});
+router.get("/showcase", sign_1.isLoggedIn, async (req, res) => {
     //@ts-ignore
     const user = req.user.sub;
-    const r = yield model_1.default.findById(user).catch((err) => {
+    const r = await model_1.default.findById(user).catch((err) => {
         console.error(err);
         res.status(500).json({});
     });
-    const result = yield model_1.default.find({
+    const result = await model_1.default.find({
         account_type: (r === null || r === void 0 ? void 0 : r.account_type) === "lender" ? "borrower" : "lender",
     })
         .exec()
@@ -65,8 +56,8 @@ router.get("/showcase", sign_1.isLoggedIn, (req, res) => __awaiter(void 0, void 
         res.status(404).json({});
     });
     res.json(result);
-}));
-router.get("/dashboard", sign_1.isLoggedIn, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+});
+router.get("/dashboard", sign_1.isLoggedIn, async (req, res) => {
     // console.log("received")
     // const result = await User.findById(req.user.sub)
     // 	.exec()
@@ -77,14 +68,14 @@ router.get("/dashboard", sign_1.isLoggedIn, (req, res) => __awaiter(void 0, void
     // res.json(result);
     //@ts-ignore
     const user = req.user.sub;
-    const r = yield model_1.default.findById(user)
+    const r = await model_1.default.findById(user)
         .exec()
         .catch((err) => {
         console.error(err);
         res.status(500).json({});
     });
     if ((r === null || r === void 0 ? void 0 : r.account_type) == "lender") {
-        const transactions = yield model_1.Transactions.find({ lender: r._id });
+        const transactions = await model_1.Transactions.find({ lender: r._id });
         let revenue = 0;
         for (let i = 0; i < transactions.length; i++) {
             const transaction = transactions[i];
@@ -100,12 +91,13 @@ router.get("/dashboard", sign_1.isLoggedIn, (req, res) => __awaiter(void 0, void
         res.json(data);
     }
     else if ((r === null || r === void 0 ? void 0 : r.account_type) == "borrower") {
-        const transactions = yield model_1.Transactions.find({ borrower: r._id });
+        const transactions = await model_1.Transactions.find({ borrower: r._id });
         let debt = 0;
         for (let i = 0; i < transactions.length; i++) {
             const transaction = transactions[i];
             if (transaction.accepted == true && transaction.active == true) {
-                debt -= transaction.amount * (transaction.interest / 100);
+                // debt -= transaction.amount * (transaction.interest / 100);
+                debt += transaction.debt;
             }
         }
         const data = {
@@ -118,34 +110,34 @@ router.get("/dashboard", sign_1.isLoggedIn, (req, res) => __awaiter(void 0, void
     else {
         res.status(401).json({ message: "Invalid request" });
     }
-}));
-router.get("/view", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+});
+router.get("/view", async (req, res) => {
     const user = req.query.id;
-    const result = yield model_1.default.findById(user).catch((err) => {
+    const result = await model_1.default.findById(user).catch((err) => {
         console.error(err);
         res.status(500).json({});
     });
     res.json(result);
-}));
-router.get("/me", sign_1.isLoggedIn, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+});
+router.get("/me", sign_1.isLoggedIn, async (req, res) => {
     //@ts-ignore
     const user = req === null || req === void 0 ? void 0 : req.user.sub;
-    const result = yield model_1.default.findById(user).catch((err) => {
+    const result = await model_1.default.findById(user).catch((err) => {
         console.error(err);
         res.status(500).json({});
     });
     res.json(result);
-}));
-router.get("/transactions", sign_1.isLoggedIn, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+});
+router.get("/transactions", sign_1.isLoggedIn, async (req, res) => {
     //@ts-ignore
     const user = req.user.sub;
-    const r = yield model_1.default.findById(user).catch((err) => {
+    const r = await model_1.default.findById(user).catch((err) => {
         console.error(err);
         res.status(500).json({});
     });
     let result;
     if ((r === null || r === void 0 ? void 0 : r.account_type) == "lender") {
-        result = yield model_1.Transactions.find({ lender: user })
+        result = await model_1.Transactions.find({ lender: user })
             .where("active")
             .equals(true)
             .exec()
@@ -155,7 +147,7 @@ router.get("/transactions", sign_1.isLoggedIn, (req, res) => __awaiter(void 0, v
         });
     }
     else {
-        result = yield model_1.Transactions.find({ borrower: user })
+        result = await model_1.Transactions.find({ borrower: user })
             .where("active")
             .equals(true)
             .exec()
@@ -165,18 +157,18 @@ router.get("/transactions", sign_1.isLoggedIn, (req, res) => __awaiter(void 0, v
         });
     }
     res.json(result);
-}));
-router.post("/propose", sign_1.isLoggedIn, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+});
+router.post("/propose", sign_1.isLoggedIn, async (req, res) => {
     const { to, amount, date, interest } = req.body;
     //@ts-ignore
     const from = req.user.sub;
-    const result = yield model_1.default.findById(from)
+    const result = await model_1.default.findById(from)
         .exec()
         .catch((err) => {
         console.error(err);
         res.status(500).json({});
     });
-    const result2 = yield model_1.default.findById(to)
+    const result2 = await model_1.default.findById(to)
         .exec()
         .catch((err) => {
         console.error(err);
@@ -208,21 +200,21 @@ router.post("/propose", sign_1.isLoggedIn, (req, res) => __awaiter(void 0, void 
     });
     transaction.save();
     res.status(200).json(transaction);
-}));
-router.post("/cancel", sign_1.isLoggedIn, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+});
+router.post("/cancel", sign_1.isLoggedIn, async (req, res) => {
     const transaction_id = req.body.id;
     model_1.Transactions.findByIdAndUpdate(transaction_id, { active: false }).exec();
     res.json({ message: "Successful" });
-}));
-router.post("/accept", sign_1.isLoggedIn, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+});
+router.post("/accept", sign_1.isLoggedIn, async (req, res) => {
     //@ts-ignore
     const user = req.user.sub;
     const transaction_id = req.body.id;
-    let r = yield model_1.default.findById(user).catch((err) => {
+    let r = await model_1.default.findById(user).catch((err) => {
         console.error(err);
         res.status(500).json({});
     });
-    const t = yield model_1.Transactions.findById(transaction_id)
+    const t = await model_1.Transactions.findById(transaction_id)
         .exec()
         .catch((err) => {
         console.error(err);
@@ -249,7 +241,7 @@ router.post("/accept", sign_1.isLoggedIn, (req, res) => __awaiter(void 0, void 0
         }
     }
     else {
-        r = yield model_1.default.findById(t === null || t === void 0 ? void 0 : t.lender).exec();
+        r = await model_1.default.findById(t === null || t === void 0 ? void 0 : t.lender).exec();
         //@ts-ignore
         if (r.balance < (t === null || t === void 0 ? void 0 : t.amount)) {
             return res
@@ -272,7 +264,7 @@ router.post("/accept", sign_1.isLoggedIn, (req, res) => __awaiter(void 0, void 0
         }
     }
     res.json({ message: "Successfull" });
-}));
+});
 router.post("/deposit", sign_1.isLoggedIn, (req, res) => {
     //@ts-ignore
     const user = req.user.sub;
@@ -283,11 +275,11 @@ router.post("/deposit", sign_1.isLoggedIn, (req, res) => {
     }).exec();
     res.json({ message: `Deposit Successfull` });
 });
-router.post("/withdraw", sign_1.isLoggedIn, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.post("/withdraw", sign_1.isLoggedIn, async (req, res) => {
     //@ts-ignore
     const user = req.user.sub;
     const amount = req.body.amount;
-    let r = yield model_1.default.findById(user).catch((err) => {
+    let r = await model_1.default.findById(user).catch((err) => {
         console.error(err);
         res.status(500).json({});
     });
@@ -300,6 +292,69 @@ router.post("/withdraw", sign_1.isLoggedIn, (req, res) => __awaiter(void 0, void
         return res.json({ message: `Withdrawal Successfull` });
     }
     res.json({ message: `Insufficient funds` });
-}));
-router.post("/payback", sign_1.isLoggedIn, (req, res) => { });
+});
+router.post("/payback", sign_1.isLoggedIn, async (req, res) => {
+    var _a;
+    //@ts-ignore
+    const user = (_a = req.user) === null || _a === void 0 ? void 0 : _a.sub;
+    const transaction_id = req.query.id;
+    const r = await model_1.default.findById(user).exec();
+    const t = await model_1.Transactions.findById(transaction_id).exec();
+    const c = (await model_1.Commission.find().exec())[0];
+    //@ts-ignore
+    if ((r === null || r === void 0 ? void 0 : r.balance) < Math.abs(t === null || t === void 0 ? void 0 : t.debt)) {
+        return res.json({
+            message: "Insufficient funds",
+            status: 401,
+        });
+    }
+    //@ts-ignore
+    const profit = (t === null || t === void 0 ? void 0 : t.amount) * ((t === null || t === void 0 ? void 0 : t.interest) / 100);
+    const rate = profit * (c.lender / 100);
+    //@ts-ignore
+    const b_pay = t === null || t === void 0 ? void 0 : t.debt;
+    model_1.default.findByIdAndUpdate(t === null || t === void 0 ? void 0 : t.borrower, {
+        $inc: { balance: b_pay },
+    }).exec();
+    model_1.default.findByIdAndUpdate(t === null || t === void 0 ? void 0 : t.lender, {
+        //@ts-ignore
+        $inc: { balance: -b_pay - rate },
+    }).exec();
+    model_1.Transactions.findByIdAndUpdate(t === null || t === void 0 ? void 0 : t._id, {
+        //@ts-ignore
+        $set: { active: false, amount_settled: -b_pay },
+    }).exec();
+    const result = await model_1.Transactions.find({ borrower: user })
+        .where("active")
+        .equals(true)
+        .exec()
+        .catch((err) => {
+        console.error(err);
+        res.status(404).json({});
+    });
+    res.json({ result: result, status: 200 });
+    //Transactions.findByIdAndUpdate(transaction_id, {});
+});
+router.post("/changeRates", sign_1.isAdminLoggedin, async (req, res) => {
+    const c = await model_1.Commission.find().exec();
+    const r = await model_1.Commission.findByIdAndUpdate(c[0].id, {
+        $set: { lender: req.body.lender, borrower: req.body.borrower },
+    });
+    const a = await model_1.Commission.find().exec();
+    res.json(a[0]);
+});
+router.get("/commission", async (req, res) => {
+    const c = await model_1.Commission.find().exec();
+    res.json(c[0]);
+});
+router.get("/allusers", sign_1.isAdminLoggedin, async (req, res) => {
+    const r = await model_1.default.find();
+    res.json(r);
+});
+router.get("/verify", sign_1.isAdminLoggedin, async (req, res) => {
+    const id = req.query.id;
+    model_1.default.findByIdAndUpdate(id, { $set: { verified: true } }).exec();
+    const result = await model_1.default.findById(id).exec();
+    res.json(result);
+});
 exports.default = router;

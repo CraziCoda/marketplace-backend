@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -55,7 +46,7 @@ io.on("connection", (socket) => {
             }
         }
     });
-    socket.on("newMessage", (data) => __awaiter(void 0, void 0, void 0, function* () {
+    socket.on("newMessage", async (data) => {
         let msg = new model_1.Message({
             to: data.to,
             from: data.from,
@@ -69,13 +60,13 @@ io.on("connection", (socket) => {
                 sock = online[i].sockID;
             }
         }
-        const messages = yield model_1.Message.find({
+        const messages = await model_1.Message.find({
             from: { $in: [data.to, data.from] },
             to: { $in: [data.to, data.from] },
         }).exec();
         if (sock != "")
             io.to(sock).emit("messages", messages);
-    }));
+    });
     socket.on("addUser", (data) => {
         for (let i = 0; i < online.length; i++) {
             if (data.user === online[i].user) {
@@ -84,20 +75,20 @@ io.on("connection", (socket) => {
         }
         online.push(Object.assign({}, data));
     });
-    socket.on("fetchMessages", (data) => __awaiter(void 0, void 0, void 0, function* () {
+    socket.on("fetchMessages", async (data) => {
         let sock = "";
         for (let i = 0; i < online.length; i++) {
             if (online[i].user === data.user1) {
                 sock = online[i].sockID;
             }
         }
-        const messages = yield model_1.Message.find({
+        const messages = await model_1.Message.find({
             from: { $in: [data.user1, data.user2] },
             to: { $in: [data.user1, data.user2] },
         }).exec();
         if (sock != "")
             io.to(sock).emit("messages", messages);
-    }));
+    });
 });
 app.use("/auth", sign_1.default);
 app.use("/", lender_1.default);

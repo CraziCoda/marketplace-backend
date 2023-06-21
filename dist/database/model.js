@@ -23,11 +23,15 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Message = exports.Transactions = void 0;
+exports.Message = exports.Admin = exports.Commission = exports.Transactions = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 const RatingSchema = new mongoose_1.Schema({
     from: { type: String, required: true },
     rate: { type: Number, min: 0, max: 5 },
+});
+const CommissionSchema = new mongoose_1.Schema({
+    borrower: { type: Number, max: 100, min: 0, required: true, default: 10 },
+    lender: { type: Number, max: 100, min: 0, required: true, default: 10 },
 });
 const TransactionsSchema = new mongoose_1.Schema({
     borrower: { type: String, required: true },
@@ -74,5 +78,30 @@ const AdminSchema = new mongoose_1.Schema({
 });
 const User = mongoose_1.default.model("User", UserSchema);
 exports.Transactions = mongoose_1.default.model("Transactions", TransactionsSchema);
+exports.Commission = mongoose_1.default.model("Commission", CommissionSchema);
+async function comSet() {
+    const com = await exports.Commission.find().exec();
+    if (com.length > 1)
+        return true;
+    else {
+        const commission = new exports.Commission({});
+        commission.save();
+    }
+}
+exports.Admin = mongoose_1.default.model("Admin", AdminSchema);
+async function adSet() {
+    const ad = await exports.Admin.find().exec();
+    if (ad.length > 1)
+        return true;
+    else {
+        const admin = new exports.Admin({
+            username: "admin69",
+            password: "4321",
+        });
+        admin.save();
+    }
+}
+adSet();
+comSet();
 exports.Message = mongoose_1.default.model("Message", MessagesSchema);
 exports.default = User;

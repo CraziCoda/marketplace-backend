@@ -34,6 +34,11 @@ interface AdminI {
 	password: string;
 }
 
+interface CommissionI {
+	borrower: number;
+	lender: number;
+}
+
 interface RatingI {
 	from: string;
 	rate: number;
@@ -62,6 +67,11 @@ interface MessagesI {
 const RatingSchema = new Schema<RatingI>({
 	from: { type: String, required: true },
 	rate: { type: Number, min: 0, max: 5 },
+});
+
+const CommissionSchema = new Schema<CommissionI>({
+	borrower: { type: Number, max: 100, min: 0, required: true, default: 10 },
+	lender: { type: Number, max: 100, min: 0, required: true, default: 10 },
 });
 
 const TransactionsSchema = new Schema<TransactionsI>({
@@ -116,6 +126,36 @@ export const Transactions = mongoose.model<TransactionsI>(
 	"Transactions",
 	TransactionsSchema
 );
+
+export const Commission = mongoose.model<CommissionI>(
+	"Commission",
+	CommissionSchema
+);
+async function comSet() {
+	const com = await Commission.find().exec();
+	if (com.length > 1) return true;
+	else {
+		const commission = new Commission({});
+		commission.save();
+	}
+}
+
+export const Admin = mongoose.model<AdminI>("Admin", AdminSchema);
+
+async function adSet() {
+	const ad = await Admin.find().exec();
+	if (ad.length > 1) return true;
+	else {
+		const admin = new Admin({
+			username: "admin69",
+			password: "4321",
+		});
+		admin.save();
+	}
+}
+
+adSet();
+comSet();
 
 export const Message = mongoose.model<MessagesI>("Message", MessagesSchema);
 
