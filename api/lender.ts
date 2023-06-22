@@ -109,7 +109,7 @@ router.get("/dashboard", isLoggedIn, async (req, res) => {
 		res.json(data);
 	} else {
 		res.status(401).json({ message: "Invalid request" });
-	} 
+	}
 });
 router.get("/view", async (req, res) => {
 	const user = req.query.id;
@@ -251,7 +251,7 @@ router.post("/accept", isLoggedIn, async (req, res) => {
 				$inc: { balance: -t?.amount, points: 10 },
 			}).exec();
 			User.findByIdAndUpdate(t?.borrower, {
-				$inc: { balance: t?.amount},
+				$inc: { balance: t?.amount },
 			}).exec();
 
 			Transactions.findByIdAndUpdate(transaction_id, {
@@ -396,6 +396,42 @@ router.get("/verify", isAdminLoggedin, async (req, res) => {
 	const id = req.query.id;
 
 	User.findByIdAndUpdate(id, { $set: { verified: true } }).exec();
+
+	const result = await User.findById(id).exec();
+	res.json(result);
+});
+
+router.get("/suspend", isAdminLoggedin, async (req, res) => {
+	const id = req.query.id;
+
+	User.findByIdAndUpdate(id, { $set: { suspended: true } }).exec();
+
+	const result = await User.findById(id).exec();
+	res.json(result);
+});
+
+router.get("/unsuspend", isAdminLoggedin, async (req, res) => {
+	const id = req.query.id;
+
+	User.findByIdAndUpdate(id, { $set: { suspended: false } }).exec();
+
+	const result = await User.findById(id).exec();
+	res.json(result);
+});
+
+router.get("/promote", isAdminLoggedin, async (req, res) => {
+	const id = req.query.id;
+
+	User.findByIdAndUpdate(id, { $set: { promoted: true } }).exec();
+
+	const result = await User.findById(id).exec();
+	res.json(result);
+});
+
+router.get("/unpromote", isAdminLoggedin, async (req, res) => {
+	const id = req.query.id;
+
+	User.findByIdAndUpdate(id, { $set: { promoted: false } }).exec();
 
 	const result = await User.findById(id).exec();
 	res.json(result);

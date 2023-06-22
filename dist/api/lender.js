@@ -370,4 +370,28 @@ router.get("/verify", sign_1.isAdminLoggedin, async (req, res) => {
     const result = await model_1.default.findById(id).exec();
     res.json(result);
 });
+router.get("/suspend", sign_1.isAdminLoggedin, async (req, res) => {
+    const id = req.query.id;
+    model_1.default.findByIdAndUpdate(id, { $set: { suspended: true } }).exec();
+    const result = await model_1.default.findById(id).exec();
+    res.json(result);
+});
+router.get("/unsuspend", sign_1.isAdminLoggedin, async (req, res) => {
+    const id = req.query.id;
+    model_1.default.findByIdAndUpdate(id, { $set: { suspended: false } }).exec();
+    const result = await model_1.default.findById(id).exec();
+    res.json(result);
+});
+router.get("/promote", sign_1.isAdminLoggedin, async (req, res) => {
+    const id = req.query.id;
+    model_1.default.findByIdAndUpdate(id, { $set: { promoted: true } }).exec();
+    const result = await model_1.default.findById(id).exec();
+    res.json(result);
+});
+router.get("/unpromote", sign_1.isAdminLoggedin, async (req, res) => {
+    const id = req.query.id;
+    model_1.default.findByIdAndUpdate(id, { $set: { promoted: false } }).exec();
+    const result = await model_1.default.findById(id).exec();
+    res.json(result);
+});
 exports.default = router;
