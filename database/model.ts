@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+import { type } from "os";
 
 interface BorrowerI {
 	id: string;
@@ -26,6 +27,9 @@ interface UserI {
 	kin_image: string;
 	address: string;
 	balance: number;
+	promoted: boolean;
+	suspended: boolean;
+
 	ratings: RatingI[];
 }
 
@@ -107,6 +111,8 @@ const UserSchema = new Schema<UserI>({
 	kin_image: { type: String, required: true },
 	balance: { type: Number, required: true, default: 0 },
 	address: { type: String, required: true },
+	promoted: { type: Boolean, default: false },
+	suspended: { type: Boolean, default: false },
 });
 
 const MessagesSchema = new Schema<MessagesI>({

@@ -45,6 +45,7 @@ router.post("/admin", (req, res, next) => {
 		"admin",
 		{ session: false },
 		(err: { name: string; message: any }, token: any, data: any) => {
+
 			if (err) {
 				if (err.name === "IncorrectCredentialsError") {
 					return res.status(200).json({

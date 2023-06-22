@@ -65,6 +65,8 @@ const UserSchema = new mongoose_1.Schema({
     kin_image: { type: String, required: true },
     balance: { type: Number, required: true, default: 0 },
     address: { type: String, required: true },
+    promoted: { type: Boolean, default: false },
+    suspended: { type: Boolean, default: false },
 });
 const MessagesSchema = new mongoose_1.Schema({
     message: { type: String, required: true },

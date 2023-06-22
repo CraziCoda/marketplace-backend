@@ -7,7 +7,13 @@ import cors from "cors";
 import http from "http";
 import { Server } from "socket.io";
 import { Message } from "./database/model";
-import { on } from "events";
+
+let fs = require("fs");
+let dir = "./public/uploads";
+
+if (!fs.existsSync(dir)) {
+	fs.mkdirSync(dir, { recursive: true });
+}
 
 require("./database/index");
 

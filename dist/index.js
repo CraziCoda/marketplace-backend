@@ -12,6 +12,11 @@ const cors_1 = __importDefault(require("cors"));
 const http_1 = __importDefault(require("http"));
 const socket_io_1 = require("socket.io");
 const model_1 = require("./database/model");
+let fs = require("fs");
+let dir = "./public/uploads";
+if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+}
 require("./database/index");
 const app = (0, express_1.default)();
 const port = process.env.PORT || 4000;
