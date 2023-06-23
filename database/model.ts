@@ -68,6 +68,13 @@ interface MessagesI {
 	time: Date;
 }
 
+interface PromotionI {
+	points: number;
+	due_date: Date;
+	amount: number;
+	resolved: boolean;
+}
+
 const RatingSchema = new Schema<RatingI>({
 	from: { type: String, required: true },
 	rate: { type: Number, min: 0, max: 5 },
@@ -126,6 +133,18 @@ const AdminSchema = new Schema<AdminI>({
 	username: { type: String, required: true },
 	password: { type: String, required: true },
 });
+
+const PromotionSchema = new Schema<PromotionI>({
+	points: { type: Number, required: true },
+	amount: { type: Number, required: true },
+	due_date: { type: Date, required: true },
+	resolved: { type: Boolean, default: false },
+});
+
+export const Promotion = mongoose.model<PromotionI>(
+	"Promotion",
+	PromotionSchema
+);
 
 const User = mongoose.model<UserI>("User", UserSchema);
 export const Transactions = mongoose.model<TransactionsI>(

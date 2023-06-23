@@ -23,7 +23,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Message = exports.Admin = exports.Commission = exports.Transactions = void 0;
+exports.Message = exports.Admin = exports.Commission = exports.Transactions = exports.Promotion = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 const RatingSchema = new mongoose_1.Schema({
     from: { type: String, required: true },
@@ -78,6 +78,13 @@ const AdminSchema = new mongoose_1.Schema({
     username: { type: String, required: true },
     password: { type: String, required: true },
 });
+const PromotionSchema = new mongoose_1.Schema({
+    points: { type: Number, required: true },
+    amount: { type: Number, required: true },
+    due_date: { type: Date, required: true },
+    resolved: { type: Boolean, default: false },
+});
+exports.Promotion = mongoose_1.default.model("Promotion", PromotionSchema);
 const User = mongoose_1.default.model("User", UserSchema);
 exports.Transactions = mongoose_1.default.model("Transactions", TransactionsSchema);
 exports.Commission = mongoose_1.default.model("Commission", CommissionSchema);
