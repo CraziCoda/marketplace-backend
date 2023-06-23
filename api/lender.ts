@@ -188,6 +188,20 @@ router.post("/propose", isLoggedIn, async (req, res) => {
 			res.status(500).json({});
 		});
 
+	if (!result?.verified || !result2?.verified) {
+		res.status(401).json({
+			message: "Can't make a request to or from a non verified account",
+		});
+		return;
+	}
+
+	if (result?.suspended || result2?.suspended) {
+		res.status(401).json({
+			message: "Can't make a request to or from a suspended account",
+		});
+		return;
+	}
+
 	if (result?.account_type == result2?.account_type) {
 		return res.status(400).json({ message: "Matching Account types" });
 	}
@@ -385,6 +399,10 @@ router.post("/changeRates", isAdminLoggedin, async (req, res) => {
 
 	const a = await Commission.find().exec();
 	res.json(a[0]);
+});
+
+router.get("/verifyToken", isAdminLoggedin, (req, res) => {
+	res.status(200).json(req.user);
 });
 
 router.get("/commission", async (req, res) => {

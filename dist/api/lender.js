@@ -189,6 +189,18 @@ router.post("/propose", sign_1.isLoggedIn, async (req, res) => {
         console.error(err);
         res.status(500).json({});
     });
+    if (!(result === null || result === void 0 ? void 0 : result.verified) || !(result2 === null || result2 === void 0 ? void 0 : result2.verified)) {
+        res.status(401).json({
+            message: "Can't make a request to or from a non verified account",
+        });
+        return;
+    }
+    if ((result === null || result === void 0 ? void 0 : result.suspended) || (result2 === null || result2 === void 0 ? void 0 : result2.suspended)) {
+        res.status(401).json({
+            message: "Can't make a request to or from a suspended account",
+        });
+        return;
+    }
     if ((result === null || result === void 0 ? void 0 : result.account_type) == (result2 === null || result2 === void 0 ? void 0 : result2.account_type)) {
         return res.status(400).json({ message: "Matching Account types" });
     }
@@ -360,6 +372,9 @@ router.post("/changeRates", sign_1.isAdminLoggedin, async (req, res) => {
     });
     const a = await model_1.Commission.find().exec();
     res.json(a[0]);
+});
+router.get("/verifyToken", sign_1.isAdminLoggedin, (req, res) => {
+    res.status(200).json(req.user);
 });
 router.get("/commission", async (req, res) => {
     const c = await model_1.Commission.find().exec();
