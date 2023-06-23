@@ -1,6 +1,6 @@
 import { NextFunction, Router, Request, Response } from "express";
 import { isAdminLoggedin, isLoggedIn } from "./auth/sign";
-import User, { Commission, Transactions } from "../database/model";
+import User, { Commission, Promotion, Transactions } from "../database/model";
 
 const router = Router();
 
@@ -85,6 +85,7 @@ router.get("/dashboard", isLoggedIn, async (req, res) => {
 			points: r.points,
 			names,
 			ids,
+			id: r._id,
 		};
 
 		res.json(data);
@@ -105,6 +106,7 @@ router.get("/dashboard", isLoggedIn, async (req, res) => {
 			transactions: transactions,
 			names,
 			ids,
+			id: r._id,
 		};
 		res.json(data);
 	} else {
@@ -193,8 +195,8 @@ router.post("/propose", isLoggedIn, async (req, res) => {
 	let lender;
 	let borrower;
 	if (result?.account_type === "lender") {
-		if(result.balance < amount){
-			return res.status(401).json({message: "Not Enough funds"})
+		if (result.balance < amount) {
+			return res.status(401).json({ message: "Not Enough funds" });
 		}
 		lender = result._id;
 		borrower = to;
@@ -438,6 +440,107 @@ router.get("/unpromote", isAdminLoggedin, async (req, res) => {
 
 	const result = await User.findById(id).exec();
 	res.json(result);
+});
+
+function getNumberOfMonthsFromUnix(unixTimestamp: number) {
+	// Convert Unix timestamp to milliseconds
+	const timestampMs = unixTimestamp;
+
+	// Create a new Date object using the timestamp
+	const date = new Date(timestampMs);
+
+	// Get the month and year from the Date object
+	const month = date.getMonth();
+	const year = date.getFullYear();
+
+	// Calculate the number of months
+	const numberOfMonths = year * 12 + month;
+
+	return numberOfMonths;
+}
+
+router.post("/requestPromotion", isLoggedIn, async (req, res) => {
+	const { points, due_date } = req.body;
+	const date = new Date(due_date).getTime();
+	const end_month = getNumberOfMonthsFromUnix(date);
+	const now = new Date().getTime();
+	const start_month = getNumberOfMonthsFromUnix(now);
+
+	const num_months = end_month - start_month;
+	const cost_per_month = 50;
+	const cost_per_point = 2;
+
+	const cost =
+		parseInt(points) * cost_per_point +
+		(num_months == 0 ? cost_per_month : cost_per_month * num_months);
+
+	const promo = new Promotion({
+		amount: cost,
+		points: parseInt(points),
+		due_date: new Date(due_date),
+		//@ts-ignore
+		lender: req.user?.sub,
+	});
+	promo.save();
+
+	const promos = await Promotion.find({
+		//@ts-ignore
+		lender: req.user?.sub,
+	}).exec();
+
+	res.json(promos);
+});
+
+router.post("/acceptPromo", isLoggedIn, async (req, res) => {
+	//@ts-ignore
+	const user = req.user.sub;
+	const id = req.query.id;
+
+	const p = await Promotion.findById(id).exec();
+	const amount = p?.amount;
+	const r = await User.findById(user).exec();
+	//@ts-ignore
+	if (r?.balance < amount) {
+		return res.status(401).json({
+			message: "Insufficient",
+		});
+	}
+
+	User.findByIdAndUpdate(user, {
+		//@ts-ignore
+		$inc: { balance: -amount },
+		$set: { promoted: true },
+	}).exec();
+	Promotion.findByIdAndUpdate(id, { $set: { paid: true } }).exec();
+
+	const promos = await Promotion.find({
+		lender: user,
+	}).exec();
+
+	res.json(promos);
+});
+
+router.post("/cancelPromo", isLoggedIn, async (req, res) => {
+	//@ts-ignore
+	const user = req.user.sub;
+	const id = req.query.id;
+
+	Promotion.findByIdAndDelete(id).exec();
+
+	const promos = await Promotion.find({
+		lender: user,
+	}).exec();
+
+	res.json(promos);
+});
+
+router.get("/promotions", isLoggedIn, async (req, res) => {
+	const promos = await Promotion.find({
+		//@ts-ignore
+		lender: req.user?.sub,
+	}).exec();
+
+	res.json(promos);
 });
 
 export default router;

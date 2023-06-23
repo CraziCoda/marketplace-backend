@@ -83,6 +83,8 @@ const PromotionSchema = new mongoose_1.Schema({
     amount: { type: Number, required: true },
     due_date: { type: Date, required: true },
     resolved: { type: Boolean, default: false },
+    paid: { type: Boolean, default: false },
+    lender: { type: String, required: true },
 });
 exports.Promotion = mongoose_1.default.model("Promotion", PromotionSchema);
 const User = mongoose_1.default.model("User", UserSchema);

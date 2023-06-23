@@ -73,6 +73,8 @@ interface PromotionI {
 	due_date: Date;
 	amount: number;
 	resolved: boolean;
+	lender: string;
+	paid: boolean
 }
 
 const RatingSchema = new Schema<RatingI>({
@@ -139,6 +141,9 @@ const PromotionSchema = new Schema<PromotionI>({
 	amount: { type: Number, required: true },
 	due_date: { type: Date, required: true },
 	resolved: { type: Boolean, default: false },
+	paid: { type: Boolean, default: false },
+	lender: { type: String, required: true },
+
 });
 
 export const Promotion = mongoose.model<PromotionI>(
