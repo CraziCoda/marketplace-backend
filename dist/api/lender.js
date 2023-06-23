@@ -193,6 +193,9 @@ router.post("/propose", sign_1.isLoggedIn, async (req, res) => {
     let lender;
     let borrower;
     if ((result === null || result === void 0 ? void 0 : result.account_type) === "lender") {
+        if (result.balance < amount) {
+            return res.status(401).json({ message: "Not Enough funds" });
+        }
         lender = result._id;
         borrower = to;
     }
