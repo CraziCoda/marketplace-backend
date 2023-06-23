@@ -508,7 +508,7 @@ router.post("/acceptPromo", isLoggedIn, async (req, res) => {
 
 	User.findByIdAndUpdate(user, {
 		//@ts-ignore
-		$inc: { balance: -amount },
+		$inc: { balance: -amount, points: p?.points },
 		$set: { promoted: true },
 	}).exec();
 	Promotion.findByIdAndUpdate(id, { $set: { paid: true } }).exec();
