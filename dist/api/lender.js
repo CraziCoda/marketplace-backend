@@ -365,6 +365,78 @@ router.post("/payback", sign_1.isLoggedIn, async (req, res) => {
     res.json({ result: result, status: 200 });
     //Transactions.findByIdAndUpdate(transaction_id, {});
 });
+router.post("/payback2", sign_1.isLoggedIn, async (req, res) => {
+    var _a;
+    //@ts-ignore
+    const user = (_a = req.user) === null || _a === void 0 ? void 0 : _a.sub;
+    const transaction_id = req.query.id;
+    const { amount } = req.body;
+    const r = await model_1.default.findById(user).exec();
+    const t = await model_1.Transactions.findById(transaction_id).exec();
+    const c = (await model_1.Commission.find().exec())[0];
+    //@ts-ignore
+    if ((r === null || r === void 0 ? void 0 : r.balance) < amount) {
+        return res.json({
+            message: "Insufficient funds",
+            status: 401,
+        });
+    }
+    const debt_left = amount + (t === null || t === void 0 ? void 0 : t.debt);
+    if (debt_left < 0) {
+        const rate = amount * (c.lender / 100);
+        model_1.default.findByIdAndUpdate(t === null || t === void 0 ? void 0 : t.borrower, {
+            $inc: { balance: -amount },
+        }).exec();
+        model_1.default.findByIdAndUpdate(t === null || t === void 0 ? void 0 : t.lender, {
+            //@ts-ignore
+            $inc: { balance: amount - rate },
+        }).exec();
+        model_1.Transactions.findByIdAndUpdate(t === null || t === void 0 ? void 0 : t._id, {
+            //@ts-ignore
+            $inc: { amount_settled: amount, debt: amount },
+        }).exec();
+    }
+    else if (debt_left == 0) {
+        const rate = amount * (c.lender / 100);
+        model_1.default.findByIdAndUpdate(t === null || t === void 0 ? void 0 : t.borrower, {
+            $inc: { balance: -amount, points: 10 },
+        }).exec();
+        model_1.default.findByIdAndUpdate(t === null || t === void 0 ? void 0 : t.lender, {
+            //@ts-ignore
+            $inc: { balance: amount - rate, debt: amount },
+        }).exec();
+        model_1.Transactions.findByIdAndUpdate(t === null || t === void 0 ? void 0 : t._id, {
+            //@ts-ignore
+            $inc: { amount_settled: amount },
+            $set: { active: false },
+        }).exec();
+    }
+    else {
+        //@ts-ignore
+        const rate = -(t === null || t === void 0 ? void 0 : t.debt) * (c.lender / 100);
+        model_1.default.findByIdAndUpdate(t === null || t === void 0 ? void 0 : t.borrower, {
+            $inc: { balance: t === null || t === void 0 ? void 0 : t.debt, points: 10 },
+        }).exec();
+        model_1.default.findByIdAndUpdate(t === null || t === void 0 ? void 0 : t.lender, {
+            //@ts-ignore
+            $inc: { balance: -(t === null || t === void 0 ? void 0 : t.debt) - rate, debt: -(t === null || t === void 0 ? void 0 : t.debt) },
+        }).exec();
+        model_1.Transactions.findByIdAndUpdate(t === null || t === void 0 ? void 0 : t._id, {
+            //@ts-ignore
+            $inc: { amount_settled: -(t === null || t === void 0 ? void 0 : t.debt) },
+            $set: { active: false },
+        }).exec();
+    }
+    const result = await model_1.Transactions.find({ borrower: user })
+        .where("active")
+        .equals(true)
+        .exec()
+        .catch((err) => {
+        console.error(err);
+        res.status(404).json({});
+    });
+    res.json({ result: result, status: 200 });
+});
 router.post("/changeRates", sign_1.isAdminLoggedin, async (req, res) => {
     const c = await model_1.Commission.find().exec();
     const r = await model_1.Commission.findByIdAndUpdate(c[0].id, {

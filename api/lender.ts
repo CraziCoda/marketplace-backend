@@ -199,6 +199,7 @@ router.post("/propose", isLoggedIn, async (req, res) => {
 		res.status(401).json({
 			message: "Can't make a request to or from a suspended account",
 		});
+
 		return;
 	}
 
@@ -388,6 +389,88 @@ router.post("/payback", isLoggedIn, async (req, res) => {
 	res.json({ result: result, status: 200 });
 
 	//Transactions.findByIdAndUpdate(transaction_id, {});
+});
+
+router.post("/payback2", isLoggedIn, async (req, res) => {
+	//@ts-ignore
+	const user = req.user?.sub;
+	const transaction_id = req.query.id;
+	const { amount } = req.body;
+	const r = await User.findById(user).exec();
+	const t = await Transactions.findById(transaction_id).exec();
+	const c = (await Commission.find().exec())[0];
+
+	//@ts-ignore
+	if (r?.balance < amount) {
+		return res.json({
+			message: "Insufficient funds",
+			status: 401,
+		});
+	}
+
+	const debt_left = amount + t?.debt;
+
+	if (debt_left < 0) {
+		const rate = amount * (c.lender / 100);
+
+		User.findByIdAndUpdate(t?.borrower, {
+			$inc: { balance: -amount },
+		}).exec();
+
+		User.findByIdAndUpdate(t?.lender, {
+			//@ts-ignore
+			$inc: { balance: amount - rate },
+		}).exec();
+
+		Transactions.findByIdAndUpdate(t?._id, {
+			//@ts-ignore
+			$inc: { amount_settled: amount, debt: amount },
+		}).exec();
+	} else if (debt_left == 0) {
+		const rate = amount * (c.lender / 100);
+		User.findByIdAndUpdate(t?.borrower, {
+			$inc: { balance: -amount, points: 10 },
+		}).exec();
+
+		User.findByIdAndUpdate(t?.lender, {
+			//@ts-ignore
+			$inc: { balance: amount - rate, debt: amount },
+		}).exec();
+
+		Transactions.findByIdAndUpdate(t?._id, {
+			//@ts-ignore
+			$inc: { amount_settled: amount },
+			$set: { active: false },
+		}).exec();
+	} else {
+		//@ts-ignore
+		const rate = -t?.debt * (c.lender / 100);
+		User.findByIdAndUpdate(t?.borrower, {
+			$inc: { balance: t?.debt, points: 10 },
+		}).exec();
+
+		User.findByIdAndUpdate(t?.lender, {
+			//@ts-ignore
+			$inc: { balance: -t?.debt - rate, debt: -t?.debt },
+		}).exec();
+
+		Transactions.findByIdAndUpdate(t?._id, {
+			//@ts-ignore
+			$inc: { amount_settled: -t?.debt },
+			$set: { active: false },
+		}).exec();
+	}
+
+	const result = await Transactions.find({ borrower: user })
+		.where("active")
+		.equals(true)
+		.exec()
+		.catch((err) => {
+			console.error(err);
+			res.status(404).json({});
+		});
+
+	res.json({ result: result, status: 200 });
 });
 
 router.post("/changeRates", isAdminLoggedin, async (req, res) => {
